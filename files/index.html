@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgriMind AI – Smart Agriculture System</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1a7a4a;--green-l:#22a05a;--green-ll:#e8f7ee;
+  --amber:#c47c10;--amber-l:#f5a623;--amber-ll:#fef6e0;
+  --blue:#1859a8;--blue-l:#2d7de8;--blue-ll:#e8f0fc;
+  --red:#a82318;--red-l:#e53935;--red-ll:#fdecea;
+  --purple:#5c3bb7;--purple-l:#7c5ce8;--purple-ll:#f0ebfc;
+  --bg:#f4f6f3;--card:#fff;--border:#e2e8df;
+  --text:#1c2a1a;--muted:#6b7c69;--subtle:#a8b5a5;
+  --shadow:0 2px 16px rgba(30,60,20,0.08);
+  --radius:16px;--radius-sm:10px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+h1,h2,h3,.brand{font-family:'Syne',sans-serif}
+input,select,textarea{font-family:'Plus Jakarta Sans',sans-serif}
+button{font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;padding:0 0 1rem}
+.brand-wrap{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border)}
+.brand{font-size:1.3rem;font-weight:800;color:var(--green);display:flex;align-items:center;gap:8px}
+.brand-leaf{width:32px;height:32px;background:linear-gradient(135deg,var(--green-l),var(--green));border-radius:50% 0 50% 0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem}
+.brand-sub{font-size:0.68rem;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;margin-top:2px}
+.nav{flex:1;overflow-y:auto;padding:.75rem .75rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.65rem .75rem;border-radius:10px;cursor:pointer;transition:all .15s;color:var(--muted);font-size:.85rem;font-weight:500;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--green-ll);color:var(--green)}
+.nav-item.active{background:var(--green);color:#fff;font-weight:600}
+.nav-item .icon{width:20px;height:20px;flex-shrink:0}
+.nav-section{font-size:.68rem;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.08em;padding:.75rem .75rem .3rem;margin-top:.25rem}
+.sidebar-footer{padding:.75rem 1rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+.user-dot{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+
+/* MAIN */
+.main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:.85rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:1.05rem;font-weight:700;color:var(--text)}
+.topbar-meta{font-size:.75rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:.75rem}
+.weather-badge{background:var(--amber-ll);color:var(--amber);padding:.3rem .75rem;border-radius:20px;font-size:.75rem;font-weight:600;display:flex;align-items:center;gap:5px}
+.notif-btn{width:34px;height:34px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red-l);border:1.5px solid #fff}
+.content{padding:2rem;flex:1}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow)}
+.card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:1rem;font-weight:700}
+.card-body{padding:1.5rem}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:1.25rem 1.5rem;position:relative;overflow:hidden}
+.stat-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:.75rem}
+.stat-icon.green{background:var(--green-ll)}
+.stat-icon.amber{background:var(--amber-ll)}
+.stat-icon.blue{background:var(--blue-ll)}
+.stat-icon.red{background:var(--red-ll)}
+.stat-icon.purple{background:var(--purple-ll)}
+.stat-val{font-size:1.6rem;font-weight:800;color:var(--text);font-family:'Syne',sans-serif}
+.stat-label{font-size:.75rem;color:var(--muted);margin-top:2px;font-weight:500}
+.stat-change{font-size:.72rem;font-weight:600;margin-top:.5rem}
+.stat-change.up{color:var(--green-l)}
+.stat-change.down{color:var(--red-l)}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem}
+.form-group{display:flex;flex-direction:column;gap:.4rem}
+.form-label{font-size:.78rem;font-weight:600;color:var(--muted)}
+.form-input{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .9rem;font-size:.88rem;color:var(--text);transition:border .15s;outline:none}
+.form-input:focus{border-color:var(--green-l);background:#fff}
+.form-select{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .9rem;font-size:.88rem;color:var(--text);outline:none;cursor:pointer}
+.form-select:focus{border-color:var(--green-l)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.5rem;border:none;border-radius:var(--radius-sm);padding:.65rem 1.25rem;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:#156040;transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--green);color:var(--green);background:var(--green-ll)}
+.btn-amber{background:var(--amber-l);color:#fff}
+.btn-amber:hover{background:var(--amber);transform:translateY(-1px)}
+.btn-blue{background:var(--blue-l);color:#fff}
+.btn-blue:hover{background:var(--blue);transform:translateY(-1px)}
+.btn-red{background:var(--red-l);color:#fff}
+.btn-red:hover{background:var(--red)}
+.btn-lg{padding:.85rem 2rem;font-size:.95rem;border-radius:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* RESULT CARD */
+.result-card{background:linear-gradient(135deg,var(--green-ll),#fff);border:1.5px solid #b3ddc2;border-radius:var(--radius);padding:1.5rem;margin-top:1.25rem;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-badge{display:inline-flex;align-items:center;gap:.4rem;background:var(--green);color:#fff;border-radius:20px;padding:.3rem .9rem;font-size:.78rem;font-weight:700;margin-bottom:.75rem}
+.result-crop{font-size:1.8rem;font-weight:800;color:var(--green);font-family:'Syne',sans-serif}
+.result-sub{font-size:.85rem;color:var(--muted);margin-top:.25rem}
+
+/* DISEASE RESULT */
+.disease-card{background:var(--red-ll);border:1.5px solid #f5b8b5;border-radius:var(--radius);padding:1.5rem;margin-top:1.25rem;animation:slideIn .3s ease}
+.disease-name{font-size:1.3rem;font-weight:800;color:var(--red);font-family:'Syne',sans-serif}
+.solution-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-top:1rem}
+.solution-title{font-size:.78rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.solution-text{font-size:.85rem;color:var(--text);line-height:1.6}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg)}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--green-l);background:var(--green-ll)}
+.upload-zone input{display:none}
+.upload-icon{font-size:2.5rem;margin-bottom:.75rem}
+.upload-text{font-size:.9rem;font-weight:600;color:var(--text)}
+.upload-sub{font-size:.78rem;color:var(--muted);margin-top:.3rem}
+.img-preview{max-width:100%;max-height:280px;border-radius:var(--radius-sm);margin:1rem 0;object-fit:contain}
+
+/* VOICE */
+.mic-btn{width:100px;height:100px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:2.2rem;transition:all .2s;position:relative}
+.mic-btn.idle{background:var(--green);color:#fff;box-shadow:0 4px 20px rgba(26,122,74,0.35)}
+.mic-btn.listening{background:var(--red-l);color:#fff;animation:pulse 1s infinite}
+.mic-btn.idle:hover{transform:scale(1.06);box-shadow:0 6px 28px rgba(26,122,74,0.4)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,57,53,.5)}50%{box-shadow:0 0 0 18px rgba(229,57,53,0)}}
+.voice-transcript{background:var(--bg);border-radius:var(--radius-sm);padding:1rem 1.25rem;font-size:.9rem;color:var(--text);border:1px solid var(--border);margin-top:1rem;min-height:60px}
+.voice-response{background:var(--green-ll);border-radius:var(--radius-sm);padding:1rem 1.25rem;font-size:.9rem;color:var(--green);border:1px solid #b3ddc2;margin-top:.75rem;min-height:60px}
+.lang-toggle{display:flex;background:var(--bg);border-radius:8px;padding:3px;gap:2px;width:fit-content;margin-bottom:1rem}
+.lang-btn{border:none;background:none;padding:.35rem .85rem;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s}
+.lang-btn.active{background:#fff;color:var(--green);box-shadow:var(--shadow)}
+
+/* TOAST */
+.toast-wrap{position:fixed;top:1.25rem;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.75rem 1.25rem;box-shadow:0 8px 30px rgba(0,0,0,.12);display:flex;align-items:center;gap:.6rem;font-size:.82rem;font-weight:600;animation:toastIn .25s ease;pointer-events:all;max-width:300px}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast.success{border-left:3px solid var(--green-l);color:var(--green)}
+.toast.error{border-left:3px solid var(--red-l);color:var(--red)}
+.toast.info{border-left:3px solid var(--blue-l);color:var(--blue)}
+
+/* SPINNER */
+.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top:2.5px solid #fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.spinner.dark{border-color:var(--border);border-top-color:var(--green)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* QUICK ACTIONS */
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:2rem}
+.quick-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1rem;text-align:center;cursor:pointer;transition:all .18s}
+.quick-card:hover{border-color:var(--green-l);box-shadow:0 4px 20px rgba(26,122,74,.1);transform:translateY(-2px)}
+.quick-card:hover .qc-icon{transform:scale(1.1)}
+.qc-icon{font-size:1.8rem;margin-bottom:.6rem;transition:transform .18s;display:block}
+.qc-label{font-size:.8rem;font-weight:700;color:var(--text)}
+.qc-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+
+/* CHART */
+.chart-wrap{position:relative;height:220px;margin-top:1rem}
+
+/* PROGRESS BAR */
+.prog-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.prog-label{font-size:.78rem;color:var(--muted);font-weight:600;width:90px;flex-shrink:0}
+.prog-bar{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.prog-val{font-size:.75rem;font-weight:700;color:var(--text);width:35px;text-align:right}
+
+/* TIPS */
+.tip-card{background:var(--amber-ll);border:1px solid #f5d99a;border-radius:var(--radius-sm);padding:1rem;display:flex;gap:.75rem;align-items:flex-start}
+.tip-icon{font-size:1.2rem;flex-shrink:0}
+.tip-text{font-size:.8rem;color:#7a4a05;line-height:1.5}
+
+/* AUTH */
+.auth-bg{min-height:100vh;display:flex;align-items:stretch;background:var(--bg)}
+.auth-left{width:420px;flex-shrink:0;background:linear-gradient(160deg,#0f4a2a,#1a7a4a 60%,#22a05a);display:flex;flex-direction:column;justify-content:flex-end;padding:3rem;position:relative;overflow:hidden}
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-card{background:#fff;border-radius:24px;border:1px solid var(--border);padding:2.5rem;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.07)}
+.auth-leaf{position:absolute;width:280px;height:280px;border-radius:50% 0 50% 0;opacity:.08;background:#fff}
+.auth-leaf-1{top:-60px;right:-60px}
+.auth-leaf-2{bottom:60px;left:-100px;width:200px;height:200px;border-radius:0 50% 0 50%}
+.auth-brand-big{font-size:2.8rem;font-weight:800;color:#fff;font-family:'Syne',sans-serif;line-height:1.1;margin-bottom:1rem}
+.auth-tagline{font-size:.95rem;color:rgba(255,255,255,.75);line-height:1.6;margin-bottom:2rem}
+.auth-feat{display:flex;align-items:center;gap:.75rem;color:rgba(255,255,255,.9);font-size:.82rem;margin-bottom:.6rem;font-weight:500}
+.auth-feat-dot{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0}
+.auth-title{font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:.3rem;font-family:'Syne',sans-serif}
+.auth-sub{font-size:.85rem;color:var(--muted);margin-bottom:2rem}
+.auth-link{color:var(--green);font-weight:700;cursor:pointer;background:none;border:none;font-size:.85rem;font-family:'Plus Jakarta Sans',sans-serif}
+.auth-link:hover{text-decoration:underline}
+.tab-row{display:flex;gap:.5rem;margin-bottom:.25rem}
+.field-row{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.field-label{font-size:.78rem;font-weight:700;color:var(--muted)}
+.field-input{padding:.7rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;color:var(--text);outline:none;background:#fff;transition:border .15s;font-family:'Plus Jakarta Sans',sans-serif;width:100%}
+.field-input:focus{border-color:var(--green-l)}
+.divider{text-align:center;font-size:.75rem;color:var(--subtle);margin:1.25rem 0;position:relative}
+.divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+.divider span{background:#fff;padding:0 .75rem;position:relative}
+.social-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;padding:.7rem;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text);transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.social-btn:hover{border-color:var(--green);background:var(--green-ll);color:var(--green)}
+
+/* SECTION HEADING */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.section-title{font-size:1.15rem;font-weight:800;color:var(--text)}
+.section-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;border-radius:20px;font-size:.72rem;font-weight:700}
+.badge-green{background:var(--green-ll);color:var(--green)}
+.badge-amber{background:var(--amber-ll);color:var(--amber)}
+.badge-blue{background:var(--blue-ll);color:var(--blue)}
+.badge-red{background:var(--red-ll);color:var(--red)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .main{margin-left:0}
+  .auth-left{display:none}
+  .auth-right{padding:1.25rem}
+  .content{padding:1.25rem}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .quick-grid{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+}
+
+.page{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* PROFIT */
+.profit-result{background:linear-gradient(135deg,#0f4a2a,#1a7a4a);border-radius:var(--radius);padding:2rem;color:#fff;text-align:center;margin-top:1.25rem;animation:slideIn .3s ease}
+.profit-num{font-size:2.8rem;font-weight:800;font-family:'Syne',sans-serif;margin:.5rem 0}
+.profit-label{font-size:.85rem;opacity:.8;font-weight:500}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+
+.chart-container{position:relative;width:100%;height:220px}
+
+/* ACTIVITY */
+.activity-item{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.act-text{font-size:.82rem;color:var(--text);font-weight:500}
+.act-time{font-size:.72rem;color:var(--subtle);margin-top:2px}
+
+/* INFO CHIPS */
+.info-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+.chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:.25rem .75rem;font-size:.75rem;font-weight:600;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+/* ===================== MOCK AI RESPONSES ===================== */
+const CROPS=["Rice","Wheat","Maize","Chickpea","Lentil","Jute","Cotton","Coconut","Papaya","Orange","Apple","Muskmelon","Watermelon","Grapes","Mango","Banana","Pomegranate","Lemon","Blackgram","Mungbean","Mothbeans","Pigeonpeas","Kidneybeans","Coffee","Tobacco","Soybean"];
+const DISEASES={
+  "leaf_blight":{name:"Leaf Blight",desc:"Fungal infection causing brown lesions on leaves",solution:"Apply Mancozeb 75% WP at 2.5g/L water. Remove infected leaves. Ensure proper drainage. Avoid overhead irrigation."},
+  "powdery_mildew":{name:"Powdery Mildew",desc:"White powdery coating on leaves due to fungal growth",solution:"Spray Sulphur 80% WP at 2g/L or Trifloxystrobin. Improve air circulation. Avoid excess nitrogen fertilizers."},
+  "rust":{name:"Leaf Rust",desc:"Orange-brown pustules on leaves reducing photosynthesis",solution:"Apply Propiconazole 25% EC at 1mL/L water. Use resistant varieties. Rotate crops annually."},
+  "healthy":{name:"Healthy Plant",desc:"No disease detected. Your crop looks great!",solution:"Continue current management practices. Maintain regular irrigation and balanced fertilization schedule."}
+};
+
+function mockPredict(type,data){
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      if(type==="crop"){
+        const n=parseFloat(data.N),p=parseFloat(data.P),k=parseFloat(data.K);
+        const idx=Math.abs(Math.floor((n*7+p*3+k*2+parseFloat(data.temp)*5+parseFloat(data.humidity))%CROPS.length));
+        resolve({crop:CROPS[idx],confidence:(82+Math.random()*15).toFixed(1),alternatives:[CROPS[(idx+1)%CROPS.length],CROPS[(idx+2)%CROPS.length]]});
+      }else if(type==="price"){
+        const base={Rice:2200,Wheat:2150,Maize:1800,Cotton:6500,Soybean:4200,default:2000};
+        const b=base[data.crop]||base.default;
+        const prices=Array.from({length:6},(_,i)=>Math.round(b*(0.85+Math.random()*0.3)+(i*50)));
+        resolve({current:prices[5],min:Math.min(...prices),max:Math.max(...prices),trend:prices,forecast:Math.round(prices[5]*(1.04+Math.random()*0.08))});
+      }else if(type==="disease"){
+        const keys=Object.keys(DISEASES);
+        const d=DISEASES[keys[Math.floor(Math.random()*keys.length)]];
+        resolve(d);
+      }else if(type==="profit"){
+        const {cost,land,price}=data;
+        const yield_=parseFloat(land)*1800+Math.random()*400;
+        const revenue=yield_*parseFloat(price)/100;
+        const profit=revenue-parseFloat(cost);
+        const margin=((profit/revenue)*100).toFixed(1);
+        const best=CROPS[Math.floor(Math.random()*8)];
+        resolve({profit:profit.toFixed(0),revenue:revenue.toFixed(0),yield_:yield_.toFixed(0),margin,best});
+      }else if(type==="voice"){
+        const responses={
+          en:["Based on current soil conditions, I recommend planting Rice or Wheat for maximum yield.","Crop prices are expected to rise 8% next season due to lower rainfall forecasts.","For your query: apply NPK fertilizer at 120:60:40 ratio for optimal growth.","The best time to sow is between June and July for Kharif crops."],
+          te:["మీ భూమి పరిస్థితుల ఆధారంగా వరి లేదా గోధుమ పండించడం మంచిది.","రాబోయే సీజన్‌లో పంట ధరలు 8% పెరిగే అవకాశం ఉంది.","మట్టి pH 6.5-7.5 మధ్య ఉండాలి. సున్నపు రాయి చల్లండి.","జూన్-జులై నెలల్లో విత్తడం ఉత్తమం."]
+        };
+        const arr=responses[data.lang]||responses.en;
+        resolve({text:arr[Math.floor(Math.random()*arr.length)]});
+      }
+    },1400+Math.random()*600);
+  });
+}
+
+/* ===================== TOAST ===================== */
+function Toasts({toasts}){
+  return(
+    <div className="toast-wrap">
+      {toasts.map(t=>(
+        <div key={t.id} className={`toast ${t.type}`}>
+          <span>{t.type==="success"?"✓":t.type==="error"?"✕":"ℹ"}</span>
+          {t.msg}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ===================== AUTH ===================== */
+function AuthPage({onLogin}){
+  const [mode,setMode]=useState("login");
+  const [form,setForm]=useState({name:"",email:"",password:"",confirm:""});
+  const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState("");
+
+  const features=["AI-Powered Crop Prediction","Real-Time Price Forecasting","Disease Detection & Solutions","Multilingual Voice Assistant","Profit Optimization Engine"];
+
+  function handleSubmit(){
+    setErr("");
+    if(!form.email||!form.password){setErr("Please fill all required fields.");return;}
+    if(mode==="signup"&&form.password!==form.confirm){setErr("Passwords do not match.");return;}
+    if(mode==="signup"&&!form.name){setErr("Name is required.");return;}
+    setLoading(true);
+    setTimeout(()=>{setLoading(false);onLogin({name:form.name||"Farmer",email:form.email});},1200);
+  }
+
+  return(
+    <div className="auth-bg">
+      <div className="auth-left">
+        <div className="auth-leaf auth-leaf-1"/>
+        <div className="auth-leaf auth-leaf-2"/>
+        <div>
+          <div style={{fontSize:"2.5rem",marginBottom:".5rem"}}>🌿</div>
+          <div className="auth-brand-big">AgriMind<br/>AI System</div>
+          <div className="auth-tagline">Empowering farmers with artificial intelligence for smarter, more profitable agriculture.</div>
+          {features.map((f,i)=>(
+            <div key={i} className="auth-feat">
+              <div className="auth-feat-dot">✓</div>
+              {f}
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:"2rem",fontSize:".75rem",color:"rgba(255,255,255,.45)"}}>© 2024 AgriMind AI · Trusted by 50,000+ farmers</div>
+      </div>
+      <div className="auth-right">
+        <div className="auth-card">
+          <div style={{textAlign:"center",marginBottom:"1.75rem"}}>
+            <div style={{fontSize:"2rem",marginBottom:".4rem"}}>🌱</div>
+            <div className="auth-title">{mode==="login"?"Welcome Back":"Create Account"}</div>
+            <div className="auth-sub">{mode==="login"?"Sign in to your AgriMind account":"Join 50,000+ farmers using AI"}</div>
+          </div>
+
+          {err&&<div style={{background:"var(--red-ll)",border:"1px solid #f5b8b5",borderRadius:"8px",padding:".65rem 1rem",fontSize:".8rem",color:"var(--red)",marginBottom:"1rem"}}>{err}</div>}
+
+          <div className="tab-row">
+            <button onClick={()=>setMode("login")} className="btn" style={{flex:1,background:mode==="login"?"var(--green)":"var(--bg)",color:mode==="login"?"#fff":"var(--muted)",border:"none"}}>Sign In</button>
+            <button onClick={()=>setMode("signup")} className="btn" style={{flex:1,background:mode==="signup"?"var(--green)":"var(--bg)",color:mode==="signup"?"#fff":"var(--muted)",border:"none"}}>Sign Up</button>
+          </div>
+
+          <div style={{marginTop:"1.25rem"}}>
+            {mode==="signup"&&(
+              <div className="field-row">
+                <div className="field-label">Full Name</div>
+                <input className="field-input" placeholder="Ravi Kumar" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
+              </div>
+            )}
+            <div className="field-row">
+              <div className="field-label">Email Address</div>
+              <input className="field-input" type="email" placeholder="you@example.com" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+            </div>
+            <div className="field-row">
+              <div className="field-label">Password</div>
+              <input className="field-input" type="password" placeholder="••••••••" value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/>
+            </div>
+            {mode==="signup"&&(
+              <div className="field-row">
+                <div className="field-label">Confirm Password</div>
+                <input className="field-input" type="password" placeholder="••••••••" value={form.confirm} onChange={e=>setForm({...form,confirm:e.target.value})}/>
+              </div>
+            )}
+            {mode==="login"&&(
+              <div style={{textAlign:"right",marginBottom:"1rem"}}>
+                <button className="auth-link">Forgot password?</button>
+              </div>
+            )}
+            <button className="btn btn-primary btn-lg" style={{width:"100%",justifyContent:"center"}} onClick={handleSubmit} disabled={loading}>
+              {loading&&<div className="spinner"/>}
+              {mode==="login"?"Sign In to AgriMind":"Create My Account"}
+            </button>
+          </div>
+
+          <div className="divider"><span>or continue with</span></div>
+          <button className="social-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Continue with Google
+          </button>
+
+          <div style={{textAlign:"center",marginTop:"1.25rem",fontSize:".82rem",color:"var(--muted)"}}>
+            {mode==="login"?"Don't have an account? ":"Already have an account? "}
+            <button className="auth-link" onClick={()=>setMode(mode==="login"?"signup":"login")}>
+              {mode==="login"?"Sign Up Free":"Sign In"}
+            </button>
+          </div>
+          {mode==="signup"&&<div style={{textAlign:"center",marginTop:".5rem",fontSize:".72rem",color:"var(--subtle)"}}>By signing up, you agree to our Terms & Privacy Policy</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== PRICE CHART ===================== */
+function PriceChart({prices,crop}){
+  const ref=useRef();
+  const chartRef=useRef();
+  useEffect(()=>{
+    if(!prices||!ref.current)return;
+    if(chartRef.current)chartRef.current.destroy();
+    const labels=["Jan","Feb","Mar","Apr","May","Jun"];
+    chartRef.current=new Chart(ref.current,{
+      type:"line",
+      data:{
+        labels,
+        datasets:[{
+          label:`${crop} Price (₹/quintal)`,
+          data:prices,
+          borderColor:"#1a7a4a",
+          backgroundColor:"rgba(26,122,74,.08)",
+          borderWidth:2.5,
+          fill:true,
+          tension:.4,
+          pointBackgroundColor:"#1a7a4a",
+          pointRadius:4,
+          pointHoverRadius:6
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`₹${ctx.raw.toLocaleString()}/q`}}},
+        scales:{y:{grid:{color:"rgba(0,0,0,.05)"},ticks:{callback:v=>`₹${v.toLocaleString()}`}},x:{grid:{display:false}}}
+      }
+    });
+    return()=>{if(chartRef.current)chartRef.current.destroy();};
+  },[prices,crop]);
+  return<div className="chart-container"><canvas ref={ref}/></div>;
+}
+
+/* ===================== DASHBOARD ===================== */
+function Dashboard({navigate}){
+  const stats=[
+    {icon:"🌾",label:"Active Crops",val:"12",change:"+3 this week",dir:"up",color:"green"},
+    {icon:"💰",label:"Avg Yield Price",val:"₹2,840",change:"+5.2% vs last season",dir:"up",color:"amber"},
+    {icon:"🌡️",label:"Soil Temperature",val:"28°C",change:"Optimal range",dir:"up",color:"blue"},
+    {icon:"🌧️",label:"Rainfall (7d)",val:"42mm",change:"-12% below avg",dir:"down",color:"red"},
+    {icon:"🤖",label:"AI Predictions",val:"847",change:"This month",dir:"up",color:"purple"},
+  ];
+  const quick=[
+    {icon:"🌱",label:"Crop Prediction",sub:"AI-powered",page:"crop",color:"green"},
+    {icon:"💰",label:"Price Forecast",sub:"Market trends",page:"price",color:"amber"},
+    {icon:"📸",label:"Disease Detect",sub:"Upload image",page:"disease",color:"red"},
+    {icon:"📊",label:"Profit Calc",sub:"Optimize ROI",page:"profit",color:"blue"},
+    {icon:"🎤",label:"Voice AI",sub:"Telugu & English",page:"voice",color:"purple"},
+  ];
+  const activity=[
+    {dot:"#22a05a",text:"Crop prediction: Rice recommended for Field A",time:"2 min ago"},
+    {dot:"#f5a623",text:"Price alert: Wheat prices rose 3.2% today",time:"18 min ago"},
+    {dot:"#e53935",text:"Disease detected: Leaf blight in Field C – solution applied",time:"1h ago"},
+    {dot:"#2d7de8",text:"Profit report generated for Q3 season",time:"3h ago"},
+    {dot:"#7c5ce8",text:"Voice query answered in Telugu",time:"5h ago"},
+  ];
+  const soilParams=[
+    {label:"Nitrogen",val:78,color:"#22a05a"},
+    {label:"Phosphorus",val:55,color:"#f5a623"},
+    {label:"Potassium",val:62,color:"#2d7de8"},
+    {label:"Soil pH",val:66,color:"#7c5ce8"},
+    {label:"Humidity",val:71,color:"#e53935"},
+  ];
+
+  return(
+    <div className="page">
+      <div style={{marginBottom:"2rem",display:"flex",alignItems:"flex-end",justifyContent:"space-between",flexWrap:"wrap",gap:"1rem"}}>
+        <div>
+          <h1 style={{fontSize:"1.6rem",fontWeight:800,color:"var(--text)"}}>Good Morning, Farmer 👋</h1>
+          <div style={{fontSize:".85rem",color:"var(--muted)",marginTop:".25rem"}}>Here's what's happening with your fields today · {new Date().toLocaleDateString("en-IN",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
+        </div>
+        <div className="tip-card" style={{maxWidth:"280px",margin:0}}>
+          <span className="tip-icon">💡</span>
+          <span className="tip-text">Tip: Ideal time to sow Rabi crops is October–November. Check soil moisture first.</span>
+        </div>
+      </div>
+
+      <div className="stat-grid">
+        {stats.map((s,i)=>(
+          <div key={i} className="stat-card">
+            <div className={`stat-icon ${s.color}`}>{s.icon}</div>
+            <div className="stat-val">{s.val}</div>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-change ${s.dir}`}>{s.dir==="up"?"↑":"↓"} {s.change}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{marginBottom:"1rem"}} className="section-head">
+        <div><div className="section-title">Quick Actions</div><div className="section-sub">Launch any AI feature instantly</div></div>
+      </div>
+      <div className="quick-grid">
+        {quick.map((q,i)=>(
+          <div key={i} className="quick-card" onClick={()=>navigate(q.page)}>
+            <span className="qc-icon">{q.icon}</span>
+            <div className="qc-label">{q.label}</div>
+            <div className="qc-sub">{q.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.25rem",flexWrap:"wrap"}}>
+        <div className="card">
+          <div className="card-header"><span className="card-title">🌿 Soil Health Monitor</span><span className="badge badge-green">Live</span></div>
+          <div className="card-body">
+            {soilParams.map((p,i)=>(
+              <div key={i} className="prog-row">
+                <div className="prog-label">{p.label}</div>
+                <div className="prog-bar"><div className="prog-fill" style={{width:p.val+"%",background:p.color}}/></div>
+                <div className="prog-val">{p.val}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">📋 Recent Activity</span></div>
+          <div className="card-body" style={{padding:"1rem 1.5rem"}}>
+            {activity.map((a,i)=>(
+              <div key={i} className="activity-item">
+                <div className="act-dot" style={{background:a.dot}}/>
+                <div><div className="act-text">{a.text}</div><div className="act-time">{a.time}</div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== CROP PREDICTION ===================== */
+function CropPage({toast}){
+  const [form,setForm]=useState({N:"90",P:"42",K:"43",temp:"21",humidity:"82",ph:"6.5",rainfall:"202"});
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+
+  const fields=[
+    {key:"N",label:"Nitrogen (N)",unit:"mg/kg",ph:"90"},
+    {key:"P",label:"Phosphorus (P)",unit:"mg/kg",ph:"42"},
+    {key:"K",label:"Potassium (K)",unit:"mg/kg",ph:"43"},
+    {key:"temp",label:"Temperature",unit:"°C",ph:"21"},
+    {key:"humidity",label:"Humidity",unit:"%",ph:"82"},
+    {key:"ph",label:"Soil pH",unit:"",ph:"6.5"},
+    {key:"rainfall",label:"Rainfall",unit:"mm",ph:"202"},
+  ];
+
+  async function predict(){
+    for(const f of fields){if(!form[f.key]){toast("Fill all fields","error");return;}}
+    setLoading(true);setResult(null);
+    const r=await mockPredict("crop",form);
+    setResult(r);setLoading(false);
+    toast("Crop prediction complete!","success");
+  }
+
+  return(
+    <div className="page">
+      <div className="section-head">
+        <div><div className="section-title">🌱 Crop Prediction</div><div className="section-sub">Enter soil & climate parameters to get AI crop recommendation</div></div>
+        <span className="badge badge-green">AI Powered</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:"1.5rem",alignItems:"start"}}>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Soil & Climate Parameters</span></div>
+          <div className="card-body">
+            <div className="form-grid">
+              {fields.map(f=>(
+                <div key={f.key} className="form-group">
+                  <label className="form-label">{f.label} {f.unit&&<span style={{color:"var(--subtle)"}}>({f.unit})</span>}</label>
+                  <input className="form-input" type="number" placeholder={f.ph} value={form[f.key]} onChange={e=>setForm({...form,[f.key]:e.target.value})}/>
+                </div>
+              ))}
+            </div>
+            <div style={{marginTop:"1.5rem",display:"flex",gap:".75rem"}}>
+              <button className="btn btn-primary btn-lg" onClick={predict} disabled={loading} style={{flex:1,justifyContent:"center"}}>
+                {loading?<><div className="spinner"/>Analyzing...</>:<>🔍 Predict Best Crop</>}
+              </button>
+              <button className="btn btn-outline" onClick={()=>setForm({N:"",P:"",K:"",temp:"",humidity:"",ph:"",rainfall:""})}>Reset</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="card" style={{marginBottom:"1rem"}}>
+            <div className="card-header"><span className="card-title">📘 Input Guide</span></div>
+            <div className="card-body">
+              <div style={{fontSize:".8rem",color:"var(--muted)",lineHeight:"1.7"}}>
+                <strong>N, P, K</strong>: Nutrient levels from soil test report (mg/kg)<br/>
+                <strong>pH</strong>: Soil acidity, typically 4.5–8.5<br/>
+                <strong>Temperature</strong>: Average seasonal temperature (°C)<br/>
+                <strong>Humidity</strong>: Relative humidity (0–100%)<br/>
+                <strong>Rainfall</strong>: Annual rainfall in mm
+              </div>
+              <div className="tip-card" style={{marginTop:"1rem"}}>
+                <span className="tip-icon">💡</span>
+                <span className="tip-text">Get your soil tested at the nearest Krishi Vigyan Kendra for accurate nutrient values.</span>
+              </div>
+            </div>
+          </div>
+          {result&&(
+            <div className="result-card">
+              <div className="result-badge">✓ AI Recommendation</div>
+              <div className="result-crop">{result.crop}</div>
+              <div className="result-sub">Confidence: {result.confidence}% · Best match for your parameters</div>
+              <div style={{marginTop:"1rem",paddingTop:"1rem",borderTop:"1px solid #b3ddc2"}}>
+                <div style={{fontSize:".75rem",fontWeight:700,color:"var(--muted)",marginBottom:".4rem"}}>ALTERNATIVE CROPS</div>
+                <div className="info-chips">
+                  {result.alternatives.map((a,i)=><span key={i} className="chip">{a}</span>)}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== PRICE PREDICTION ===================== */
+function PricePage({toast}){
+  const [crop,setCrop]=useState("Rice");
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+
+  async function predict(){
+    setLoading(true);setResult(null);
+    const r=await mockPredict("price",{crop});
+    setResult(r);setLoading(false);
+    toast(`Price forecast for ${crop} ready!`,"success");
+  }
+
+  return(
+    <div className="page">
+      <div className="section-head">
+        <div><div className="section-title">💰 Price Prediction</div><div className="section-sub">AI-driven market price forecast for your crops</div></div>
+        <span className="badge badge-amber">Market Data</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1.5fr",gap:"1.5rem",alignItems:"start"}}>
+        <div>
+          <div className="card" style={{marginBottom:"1rem"}}>
+            <div className="card-header"><span className="card-title">Select Crop</span></div>
+            <div className="card-body">
+              <div className="form-group" style={{marginBottom:"1.25rem"}}>
+                <label className="form-label">Crop Name</label>
+                <select className="form-select" style={{width:"100%"}} value={crop} onChange={e=>setCrop(e.target.value)}>
+                  {CROPS.map(c=><option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <button className="btn btn-amber btn-lg" onClick={predict} disabled={loading} style={{width:"100%",justifyContent:"center"}}>
+                {loading?<><div className="spinner"/>Fetching...</>:<>📈 Get Price Forecast</>}
+              </button>
+            </div>
+          </div>
+          {result&&(
+            <div className="card">
+              <div className="card-header"><span className="card-title">Price Summary</span></div>
+              <div className="card-body">
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".75rem"}}>
+                  {[["Current",`₹${parseInt(result.current).toLocaleString()}`,"green"],["Forecast",`₹${result.forecast.toLocaleString()}`,"amber"],["Min",`₹${result.min.toLocaleString()}`,"blue"],["Max",`₹${result.max.toLocaleString()}`,"red"]].map(([l,v,c])=>(
+                    <div key={l} style={{background:"var(--bg)",borderRadius:"10px",padding:".85rem",textAlign:"center"}}>
+                      <div style={{fontSize:".7rem",color:"var(--muted)",fontWeight:700,textTransform:"uppercase",letterSpacing:".05em"}}>{l}</div>
+                      <div style={{fontSize:"1.15rem",fontWeight:800,color:`var(--${c})`,marginTop:".3rem",fontFamily:"Syne,sans-serif"}}>{v}</div>
+                      <div style={{fontSize:".68rem",color:"var(--subtle)"}}>per quintal</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">📊 6-Month Price Trend</span><span className="badge badge-amber">{crop}</span></div>
+          <div className="card-body">
+            {result?<PriceChart prices={result.trend} crop={crop}/>:(
+              <div style={{height:"220px",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--subtle)",fontSize:".85rem",flexDirection:"column",gap:".5rem"}}>
+                <div style={{fontSize:"2rem"}}>📈</div>
+                <div>Select a crop and click forecast to see price trends</div>
+              </div>
+            )}
+            {result&&(
+              <div className="tip-card" style={{marginTop:"1rem"}}>
+                <span className="tip-icon">📊</span>
+                <span className="tip-text">Next season forecast: ₹{result.forecast.toLocaleString()}/quintal. Consider selling in Feb–Mar for maximum profit.</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== DISEASE DETECTION ===================== */
+function DiseasePage({toast}){
+  const [img,setImg]=useState(null);
+  const [preview,setPreview]=useState(null);
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+  const [drag,setDrag]=useState(false);
+  const inputRef=useRef();
+
+  function handleFile(file){
+    if(!file||!file.type.startsWith("image/"))return toast("Please upload a valid image","error");
+    setImg(file);setResult(null);
+    const r=new FileReader();r.onload=e=>setPreview(e.target.result);r.readAsDataURL(file);
+  }
+
+  async function detect(){
+    if(!img)return toast("Please upload a crop image","error");
+    setLoading(true);setResult(null);
+    const r=await mockPredict("disease",{});
+    setResult(r);setLoading(false);
+    toast("Disease analysis complete!",r.name==="Healthy Plant"?"success":"info");
+  }
+
+  return(
+    <div className="page">
+      <div className="section-head">
+        <div><div className="section-title">📸 Disease Detection</div><div className="section-sub">Upload a crop leaf image for instant AI disease analysis</div></div>
+        <span className="badge badge-red">Vision AI</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.5rem",alignItems:"start"}}>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Upload Crop Image</span></div>
+          <div className="card-body">
+            <div className={`upload-zone${drag?" dragover":""}`}
+              onClick={()=>inputRef.current.click()}
+              onDragOver={e=>{e.preventDefault();setDrag(true)}}
+              onDragLeave={()=>setDrag(false)}
+              onDrop={e=>{e.preventDefault();setDrag(false);handleFile(e.dataTransfer.files[0])}}
+            >
+              <input ref={inputRef} type="file" accept="image/*" onChange={e=>handleFile(e.target.files[0])}/>
+              {preview?(
+                <img src={preview} alt="crop" className="img-preview"/>
+              ):(
+                <>
+                  <div className="upload-icon">🌿</div>
+                  <div className="upload-text">Drag & drop your crop image</div>
+                  <div className="upload-sub">or click to browse · JPG, PNG, WEBP supported</div>
+                </>
+              )}
+            </div>
+            {img&&<div style={{fontSize:".78rem",color:"var(--muted)",marginTop:".5rem"}}>📎 {img.name}</div>}
+            <div style={{display:"flex",gap:".75rem",marginTop:"1.25rem"}}>
+              <button className="btn btn-red btn-lg" onClick={detect} disabled={loading||!img} style={{flex:1,justifyContent:"center"}}>
+                {loading?<><div className="spinner"/>Analyzing...</>:<>🔬 Detect Disease</>}
+              </button>
+              {img&&<button className="btn btn-outline" onClick={()=>{setImg(null);setPreview(null);setResult(null);}}>Clear</button>}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="card" style={{marginBottom:"1rem"}}>
+            <div className="card-header"><span className="card-title">📋 How It Works</span></div>
+            <div className="card-body">
+              {[["1. Upload","Take a clear photo of the affected leaf","🌿"],["2. Analyze","AI scans for 38+ crop diseases","🔬"],["3. Solution","Get instant treatment recommendations","💊"]].map(([s,d,i])=>(
+                <div key={s} style={{display:"flex",gap:".75rem",marginBottom:".85rem"}}>
+                  <div style={{fontSize:"1.2rem",flexShrink:0}}>{i}</div>
+                  <div><div style={{fontSize:".82rem",fontWeight:700}}>{s}</div><div style={{fontSize:".75rem",color:"var(--muted)"}}>{d}</div></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {result&&(
+            <div className={result.name==="Healthy Plant"?"result-card":"disease-card"}>
+              <div className="result-badge" style={{background:result.name==="Healthy Plant"?"var(--green)":"var(--red-l)"}}>
+                {result.name==="Healthy Plant"?"✓ Healthy":"⚠ Disease Detected"}
+              </div>
+              <div className={result.name==="Healthy Plant"?"result-crop":"disease-name"}>{result.name}</div>
+              <div style={{fontSize:".82rem",color:"var(--muted)",marginTop:".25rem"}}>{result.desc}</div>
+              <div className="solution-card">
+                <div className="solution-title">💊 Recommended Treatment</div>
+                <div className="solution-text">{result.solution}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== PROFIT CALCULATOR ===================== */
+function ProfitPage({toast}){
+  const [form,setForm]=useState({cost:"50000",land:"2",price:"150"});
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+
+  async function calculate(){
+    if(!form.cost||!form.land||!form.price)return toast("Please fill all fields","error");
+    setLoading(true);setResult(null);
+    const r=await mockPredict("profit",form);
+    setResult(r);setLoading(false);
+    toast(parseFloat(r.profit)>0?"Profit analysis complete! 🎉":"Results ready","success");
+  }
+
+  const isProfit=result&&parseFloat(result.profit)>0;
+
+  return(
+    <div className="page">
+      <div className="section-head">
+        <div><div className="section-title">📊 Profit Optimizer</div><div className="section-sub">Calculate farming profit and get AI optimization suggestions</div></div>
+        <span className="badge badge-blue">Smart Calc</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.5rem",alignItems:"start"}}>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Input Parameters</span></div>
+          <div className="card-body">
+            {[{key:"cost",label:"Total Investment Cost",unit:"₹",ph:"50000",desc:"Seeds, fertilizer, labor, etc."},
+              {key:"land",label:"Land Area",unit:"acres",ph:"2",desc:"Total cultivated land"},
+              {key:"price",label:"Expected Selling Price",unit:"₹/kg",ph:"150",desc:"Market rate per kilogram"}].map(f=>(
+              <div key={f.key} className="form-group" style={{marginBottom:"1rem"}}>
+                <label className="form-label">{f.label} <span style={{color:"var(--subtle)"}}>({f.unit})</span></label>
+                <input className="form-input" type="number" placeholder={f.ph} value={form[f.key]} onChange={e=>setForm({...form,[f.key]:e.target.value})}/>
+                <div style={{fontSize:".72rem",color:"var(--subtle)"}}>{f.desc}</div>
+              </div>
+            ))}
+            <button className="btn btn-blue btn-lg" onClick={calculate} disabled={loading} style={{width:"100%",justifyContent:"center",marginTop:".5rem"}}>
+              {loading?<><div className="spinner"/>Calculating...</>:<>📊 Calculate Profit</>}
+            </button>
+          </div>
+        </div>
+        <div>
+          {result?(
+            <>
+              <div className="profit-result">
+                <div className="profit-label">{isProfit?"Total Profit":"Net Loss"}</div>
+                <div className="profit-num">{isProfit?"":"– "}₹{Math.abs(parseFloat(result.profit)).toLocaleString()}</div>
+                <div className="profit-label">Profit Margin: {result.margin}%</div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginTop:"1rem"}}>
+                {[["💰 Revenue",`₹${parseInt(result.revenue).toLocaleString()}`,"green"],["🌾 Yield",`${parseInt(result.yield_).toLocaleString()} kg`,"blue"]].map(([l,v,c])=>(
+                  <div key={l} style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",padding:"1rem",textAlign:"center"}}>
+                    <div style={{fontSize:".75rem",color:"var(--muted)",fontWeight:700}}>{l}</div>
+                    <div style={{fontSize:"1.2rem",fontWeight:800,color:`var(--${c})`,marginTop:".3rem",fontFamily:"Syne,sans-serif"}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="card" style={{marginTop:"1rem"}}>
+                <div className="card-header"><span className="card-title">🤖 AI Suggestion</span></div>
+                <div className="card-body">
+                  <div className="tip-card">
+                    <span className="tip-icon">🌱</span>
+                    <span className="tip-text">
+                      <strong>Best crop for higher profit:</strong> {result.best}. Consider planting this next season for an estimated 15–22% higher returns based on current market conditions.
+                    </span>
+                  </div>
+                  <div style={{marginTop:".75rem",fontSize:".8rem",color:"var(--muted)"}}>
+                    💡 Reduce input cost by 12% using precision irrigation and organic fertilizers.
+                  </div>
+                </div>
+              </div>
+            </>
+          ):(
+            <div className="card" style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",minHeight:"300px"}}>
+              <div style={{textAlign:"center",color:"var(--subtle)"}}>
+                <div style={{fontSize:"3rem",marginBottom:"1rem"}}>📊</div>
+                <div style={{fontWeight:600}}>Enter your farm details</div>
+                <div style={{fontSize:".8rem",marginTop:".25rem"}}>Results will appear here</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== VOICE ASSISTANT ===================== */
+function VoicePage({toast}){
+  const [listening,setListening]=useState(false);
+  const [transcript,setTranscript]=useState("");
+  const [response,setResponse]=useState("");
+  const [lang,setLang]=useState("en");
+  const [loading,setLoading]=useState(false);
+  const recognRef=useRef(null);
+
+  const prompts={
+    en:["What crop should I plant this season?","What is the price of wheat today?","How do I treat leaf blight?","How do I maximize my profit?"],
+    te:["ఈ సీజన్‌లో ఏ పంట వేయాలి?","నేడు గోధుమ ధర ఎంత?","ఆకు కుళ్ళు ఎలా నివారించాలి?","లాభాన్ని ఎలా పెంచుకోవాలి?"]
+  };
+
+  async function handleQuery(text){
+    if(!text)return;
+    setTranscript(text);setResponse("");setLoading(true);
+    const r=await mockPredict("voice",{lang});
+    setResponse(r.text);setLoading(false);
+    if(window.speechSynthesis){
+      const utt=new SpeechSynthesisUtterance(r.text);
+      utt.lang=lang==="te"?"te-IN":"en-IN";
+      window.speechSynthesis.speak(utt);
+    }
+    toast("Voice response ready!","success");
+  }
+
+  function toggleListen(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){
+      toast("Speech recognition not supported. Try a sample prompt.","info");
+      return;
+    }
+    if(listening){recognRef.current?.stop();setListening(false);return;}
+    const r=new SR();
+    r.lang=lang==="te"?"te-IN":"en-IN";
+    r.onresult=e=>handleQuery(e.results[0][0].transcript);
+    r.onend=()=>setListening(false);
+    r.onerror=()=>{setListening(false);toast("Microphone error. Try a sample prompt.","error");};
+    recognRef.current=r;
+    r.start();setListening(true);
+  }
+
+  return(
+    <div className="page">
+      <div className="section-head">
+        <div><div className="section-title">🎤 Voice Assistant</div><div className="section-sub">Ask farming questions in English or Telugu</div></div>
+        <span className="badge badge-green">Bilingual AI</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.5rem",alignItems:"start"}}>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Voice Input</span></div>
+          <div className="card-body" style={{textAlign:"center"}}>
+            <div style={{marginBottom:"1.5rem"}}>
+              <div className="lang-toggle" style={{margin:"0 auto"}}>
+                {["en","te"].map(l=>(
+                  <button key={l} className={`lang-btn${lang===l?" active":""}`} onClick={()=>setLang(l)}>
+                    {l==="en"?"🇬🇧 English":"🇮🇳 Telugu"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleListen}>
+              {listening?"⏸":"🎙️"}
+            </button>
+            <div style={{fontSize:".82rem",color:"var(--muted)",marginTop:"1rem",fontWeight:500}}>
+              {listening?"Listening... speak now":"Tap microphone to start"}
+            </div>
+
+            <div style={{marginTop:"1.5rem",textAlign:"left"}}>
+              <div style={{fontSize:".75rem",fontWeight:700,color:"var(--muted)",marginBottom:".5rem",textTransform:"uppercase",letterSpacing:".05em"}}>Try these prompts:</div>
+              {prompts[lang].map((p,i)=>(
+                <button key={i} className="btn btn-outline" style={{display:"block",width:"100%",textAlign:"left",marginBottom:".5rem",fontSize:".78rem",padding:".5rem .75rem"}} onClick={()=>handleQuery(p)}>
+                  "{p}"
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="card" style={{marginBottom:"1rem"}}>
+            <div className="card-header"><span className="card-title">📝 Recognized Text</span></div>
+            <div className="card-body" style={{padding:"1rem 1.5rem"}}>
+              <div className="voice-transcript">
+                {transcript||<span style={{color:"var(--subtle)",fontStyle:"italic"}}>Your words will appear here...</span>}
+              </div>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">🤖 AI Response</span>
+              {loading&&<div className="spinner dark"/>}
+            </div>
+            <div className="card-body" style={{padding:"1rem 1.5rem"}}>
+              <div className="voice-response">
+                {response?response:<span style={{color:"var(--subtle)",fontStyle:"italic"}}>AI response will appear here...</span>}
+              </div>
+              {response&&(
+                <button className="btn btn-outline" style={{marginTop:".75rem",fontSize:".78rem"}} onClick={()=>{
+                  if(window.speechSynthesis){
+                    const u=new SpeechSynthesisUtterance(response);
+                    u.lang=lang==="te"?"te-IN":"en-IN";
+                    window.speechSynthesis.speak(u);
+                  }
+                }}>
+                  🔊 Play Again
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== SIDEBAR NAV ===================== */
+const NAV=[
+  {id:"dashboard",icon:"🏠",label:"Dashboard"},
+  {id:"crop",icon:"🌱",label:"Crop Prediction"},
+  {id:"price",icon:"💰",label:"Price Forecast"},
+  {id:"disease",icon:"📸",label:"Disease Detection"},
+  {id:"profit",icon:"📊",label:"Profit Calculator"},
+  {id:"voice",icon:"🎤",label:"Voice Assistant"},
+];
+
+/* ===================== APP ===================== */
+function App(){
+  const [user,setUser]=useState(null);
+  const [page,setPage]=useState("dashboard");
+  const [toasts,setToasts]=useState([]);
+
+  function addToast(msg,type="success"){
+    const id=Date.now();
+    setToasts(t=>[...t,{id,msg,type}]);
+    setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3500);
+  }
+
+  const titles={dashboard:"Dashboard",crop:"Crop Prediction",price:"Price Forecast",disease:"Disease Detection",profit:"Profit Calculator",voice:"Voice Assistant"};
+  const meta={dashboard:"Overview of your farm",crop:"AI Soil Analysis",price:"Market Intelligence",disease:"Computer Vision AI",profit:"ROI Optimization",voice:"Bilingual Assistant"};
+
+  if(!user)return<AuthPage onLogin={u=>{setUser(u);addToast(`Welcome back, ${u.name||"Farmer"}! 🌿`,"success");}}/>;
+
+  return(
+    <>
+      <Toasts toasts={toasts}/>
+      <div style={{display:"flex",minHeight:"100vh"}}>
+        <div className="sidebar">
+          <div className="brand-wrap">
+            <div className="brand"><div className="brand-leaf">🌿</div>AgriMind</div>
+            <div className="brand-sub">AI Smart Agriculture System</div>
+          </div>
+          <div className="nav-section">Main Menu</div>
+          <nav className="nav">
+            {NAV.map(n=>(
+              <button key={n.id} className={`nav-item${page===n.id?" active":""}`} onClick={()=>setPage(n.id)}>
+                <span className="icon">{n.icon}</span>{n.label}
+              </button>
+            ))}
+          </nav>
+          <div className="sidebar-footer">
+            <div className="user-dot">{(user.name||"F")[0].toUpperCase()}</div>
+            <div>
+              <div style={{fontWeight:700,fontSize:".78rem",color:"var(--text)"}}>{user.name||"Farmer"}</div>
+              <button style={{border:"none",background:"none",color:"var(--red)",fontSize:".72rem",cursor:"pointer",padding:0,fontFamily:"inherit"}} onClick={()=>setUser(null)}>Sign Out</button>
+            </div>
+          </div>
+        </div>
+        <div className="main">
+          <div className="topbar">
+            <div>
+              <div className="topbar-title">{titles[page]}</div>
+              <div className="topbar-meta">{meta[page]}</div>
+            </div>
+            <div className="topbar-right">
+              <div className="weather-badge">☀️ 32°C · Hyderabad</div>
+              <div className="notif-btn"><span>🔔</span><div className="notif-dot"/></div>
+            </div>
+          </div>
+          <div className="content">
+            {page==="dashboard"&&<Dashboard navigate={setPage}/>}
+            {page==="crop"&&<CropPage toast={addToast}/>}
+            {page==="price"&&<PricePage toast={addToast}/>}
+            {page==="disease"&&<DiseasePage toast={addToast}/>}
+            {page==="profit"&&<ProfitPage toast={addToast}/>}
+            {page==="voice"&&<VoicePage toast={addToast}/>}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
